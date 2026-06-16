@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import type { InterviewerAgent } from '@/api/client';
 
 export interface InterviewSetupProps {
   jdText: string;
   onStart: (mode: string, difficulty: string) => void;
   loading: boolean;
-  interviewers?: Array<{ id: string; name: string; title: string; style: string; focus_areas: string[]; avatar: string }>;
-  onUpdateInterviewers?: (interviewers: any[]) => void;
+  interviewers?: InterviewerAgent[];
+  onUpdateInterviewers?: (interviewers: InterviewerAgent[]) => void;
 }
 
 export default function InterviewSetup({ jdText, onStart, loading, interviewers }: InterviewSetupProps) {

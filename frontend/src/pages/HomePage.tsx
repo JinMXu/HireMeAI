@@ -6,6 +6,14 @@ import { uploadResume, parseText } from '@/api/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = (error as { response?: { data?: { detail?: string } } }).response;
+    return response?.data?.detail || fallback;
+  }
+  return fallback;
+}
+
 export default function HomePage() {
   const [mode, setMode] = useState<'upload' | 'paste'>('upload');
   const [text, setText] = useState('');
@@ -22,8 +30,8 @@ export default function HomePage() {
       const res = await uploadResume(files[0]);
       setSession(res.session_id, res.text, res.filename);
       navigate('/score');
-    } catch (e: any) {
-      setError(e.response?.data?.detail || '上传失败，请重试');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, '上传失败，请重试'));
     } finally {
       setLoading(false);
     }
@@ -47,8 +55,8 @@ export default function HomePage() {
       const res = await parseText(text);
       setSession(res.session_id, res.text, res.filename);
       navigate('/score');
-    } catch (e: any) {
-      setError(e.response?.data?.detail || '解析失败，请重试');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, '解析失败，请重试'));
     } finally {
       setLoading(false);
     }

@@ -15,51 +15,64 @@ export default function InterviewPage() {
   const [history, setHistory] = useState<InterviewHistoryItem[]>([]);
   const navigate = useNavigate();
 
-  if (!sessionId) { navigate('/'); return null; }
-  if (!jdText) { navigate('/jd-match'); return null; }
+  useEffect(() => {
+    if (!sessionId) {
+      navigate('/');
+    } else if (!jdText) {
+      navigate('/jd-match');
+    }
+  }, [sessionId, jdText, navigate]);
 
   useEffect(() => {
+    if (!sessionId) return;
     getInterviewHistory(sessionId)
       .then((res) => setHistory(res.interviews))
-      .catch(() => {});
+      .catch(() => setHistory([]));
   }, [sessionId]);
 
-  const handleSetup = async (mode: string, difficulty: string) => {
+  if (!sessionId || !jdText) return null;
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (typeof error === 'object' && error !== null && 'response' in error) {
+      const response = (error as { response?: { data?: { detail?: string } } }).response;
+      return response?.data?.detail || fallback;
+    }
+    return fallback;
+  };
+
+  const handleSetup = async (mode: string, difficulty: string): Promise<InterviewerAgent[] | null> => {
     setLoading(true);
     setError('');
     try {
       const res = await setupInterview(sessionId, jdText, mode, difficulty);
       setInterviewers(res.interviewers);
-      return true;
-    } catch (e: any) {
-      const msg = e.response?.data?.detail || '面试准备失败，请重试';
-      setError(msg);
-      return false;
+      return res.interviewers;
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, '面试准备失败，请重试'));
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
   const handleStart = async (mode: string, difficulty: string) => {
-    if (!interviewers) {
-      const ok = await handleSetup(mode, difficulty);
-      if (!ok) return;
-      return;
-    }
+    const activeInterviewers = interviewers ?? await handleSetup(mode, difficulty);
+    if (!activeInterviewers) return;
+
     setLoading(true);
     setError('');
     try {
-      const res = await startInterview(sessionId, interviewers, mode, difficulty);
+      const res = await startInterview(sessionId, activeInterviewers, mode, difficulty);
       navigate('/interview/chat', {
         state: {
           interviewId: res.interview_id,
           firstMessage: res.first_message,
-          interviewers,
+          interviewers: activeInterviewers,
           mode,
         },
       });
-    } catch (e: any) {
-      setError(e.response?.data?.detail || '面试启动失败，请重试');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, '面试启动失败，请重试'));
     } finally {
       setLoading(false);
     }

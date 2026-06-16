@@ -9,17 +9,33 @@ import { Progress } from '@/components/ui/progress';
 
 export default function ResumePage() {
   const { sessionId, scores, optimizedResume, setScores, setOptimizedResume } = useAppStore();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => Boolean(sessionId && !scores));
   const [optimizing, setOptimizing] = useState(false);
   const [changes, setChanges] = useState<string[]>([]);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!sessionId) { navigate('/'); return; }
-    if (!scores) {
-      setLoading(true);
-      scoreResume(sessionId).then(setScores).finally(() => setLoading(false));
-    }
+    if (scores) return;
+
+    let cancelled = false;
+    Promise.resolve()
+      .then(() => {
+        if (!cancelled) setLoading(true);
+        return scoreResume(sessionId);
+      })
+      .then((result) => {
+        if (!cancelled) setScores(result);
+      })
+      .catch(() => {
+        if (!cancelled) setError('简历评分失败，请重试');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, [sessionId, scores, navigate, setScores]);
 
   const handleOptimize = async () => {
@@ -35,6 +51,7 @@ export default function ResumePage() {
   };
 
   if (loading) return <div className="text-center py-12 text-muted-foreground">正在评分中...</div>;
+  if (error) return <div className="text-center py-12 text-destructive">{error}</div>;
   if (!scores) return null;
 
   const chartData = scores.dimensions.map((d) => ({ name: d.name, score: d.score }));

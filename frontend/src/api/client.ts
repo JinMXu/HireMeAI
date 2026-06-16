@@ -287,6 +287,8 @@ export interface SessionRestoreData {
   scores: ScoreResult | null;
   optimized_resume: string;
   jd_match_result: MatchResult | null;
+  jd_optimized_text: string;
+  cover_letter: string;
 }
 
 export async function getSessionData(sessionId: string): Promise<SessionRestoreData> {

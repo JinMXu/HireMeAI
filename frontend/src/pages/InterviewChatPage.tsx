@@ -65,35 +65,43 @@ export default function InterviewChatPage() {
       setSending(false);
     }, 65_000);
 
-    await sendInterviewMessage(
-      state.interviewId,
-      content,
-      (msg) => setTypingStatus(msg),
-      (chunk, agentId) => {
-        setStreaming((prev) => ({
-          content: (prev?.content || '') + chunk,
-          agentId: prev?.agentId || agentId,
-        }));
-      },
-      (data) => {
-        if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
-        setMessages((prev) => [...prev, data.reply]);
-        if (data.is_complete) setIsComplete(true);
-        setTypingStatus(null);
-        setStreaming(null);
-        setSending(false);
-      },
-      (tip) => {
-        setCoachingTip(tip);
-      },
-      (err) => {
-        if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
-        setStreamError(err);
-        setTypingStatus(null);
-        setStreaming(null);
-        setSending(false);
-      },
-    );
+    try {
+      await sendInterviewMessage(
+        state.interviewId,
+        content,
+        (msg) => setTypingStatus(msg),
+        (chunk, agentId) => {
+          setStreaming((prev) => ({
+            content: (prev?.content || '') + chunk,
+            agentId: prev?.agentId || agentId,
+          }));
+        },
+        (data) => {
+          if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
+          setMessages((prev) => [...prev, data.reply]);
+          if (data.is_complete) setIsComplete(true);
+          setTypingStatus(null);
+          setStreaming(null);
+          setSending(false);
+        },
+        (tip) => {
+          setCoachingTip(tip);
+        },
+        (err) => {
+          if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
+          setStreamError(err);
+          setTypingStatus(null);
+          setStreaming(null);
+          setSending(false);
+        },
+      );
+    } catch {
+      if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
+      setStreamError('网络连接中断，请重试');
+      setTypingStatus(null);
+      setStreaming(null);
+      setSending(false);
+    }
   };
 
   const handleEnd = async () => {
@@ -101,7 +109,9 @@ export default function InterviewChatPage() {
     try {
       const res = await endInterview(state.interviewId);
       navigate('/interview/report', { state: { report: res.report, interviewers: state.interviewers } });
-    } catch {}
+    } catch {
+      setStreamError('生成评估报告失败，请重试');
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

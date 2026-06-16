@@ -122,21 +122,23 @@ def get_interview_session(interview_id: str) -> Optional[dict]:
     if runtime:
         return runtime
 
-    # Try to load from DB for completed interviews
+    # Try to load from DB when runtime objects are no longer in memory.
     db_row = get_interview_session_db(interview_id)
-    if db_row and db_row.get("status") == "completed":
+    if db_row:
         from app.utils.db import get_interview_messages, get_interview_report
         messages = get_interview_messages(interview_id)
         report = get_interview_report(interview_id)
+        is_completed = db_row.get("status") == "completed"
         return {
             "message_history": messages,
             "interviewers": db_row.get("interviewers", []),
             "mode": db_row.get("mode", "1v1"),
             "difficulty": db_row.get("difficulty", "intermediate"),
             "session_id": db_row.get("session_id", ""),
-            "status": "completed",
+            "status": db_row.get("status"),
             "report": report,
-            "_is_historical": True,
+            "_is_historical": is_completed,
+            "_runtime_missing": not is_completed,
         }
 
     return None

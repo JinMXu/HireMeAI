@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -42,10 +43,12 @@ function Button({
     asChild?: boolean
   }) {
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, {
-      ...props,
-      className: cn(buttonVariants({ variant, size, className }), (children.props as any).className),
-    } as any)
+    const child = children as React.ReactElement<{ className?: string }>
+    const childProps = props as React.HTMLAttributes<HTMLElement>
+    return React.cloneElement(child, {
+      ...childProps,
+      className: cn(buttonVariants({ variant, size, className }), child.props.className),
+    })
   }
 
   return (

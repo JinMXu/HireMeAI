@@ -14,7 +14,9 @@ function loadSessionId(): string | null {
 function saveSessionId(id: string) {
   try {
     localStorage.setItem(SESSION_KEY, id);
-  } catch {}
+  } catch {
+    // localStorage can be unavailable in private browsing or restricted embeds.
+  }
 }
 
 interface AppState {
@@ -37,6 +39,7 @@ interface AppState {
     scores: ScoreResult | null;
     optimized_resume: string;
     matchResult: MatchResult | null;
+    cover_letter: string;
   }) => void;
   setScores: (scores: ScoreResult) => void;
   setOptimizedResume: (text: string) => void;
@@ -72,6 +75,7 @@ export const useAppStore = create<AppState>((set) => ({
       scores: data.scores,
       optimizedResume: data.optimized_resume || null,
       matchResult: data.matchResult,
+      coverLetter: data.cover_letter || null,
     });
   },
   setScores: (scores) => set({ scores }),
@@ -81,7 +85,11 @@ export const useAppStore = create<AppState>((set) => ({
   setCoverLetter: (letter) => set({ coverLetter: letter }),
   setStep: (step) => set({ currentStep: step }),
   reset: () => {
-    try { localStorage.removeItem(SESSION_KEY); } catch {}
+    try {
+      localStorage.removeItem(SESSION_KEY);
+    } catch {
+      // Keep the in-memory reset even if browser storage is unavailable.
+    }
     set({
       sessionId: null, resumeText: null, resumeFileName: null,
       jdText: null, scores: null, optimizedResume: null,

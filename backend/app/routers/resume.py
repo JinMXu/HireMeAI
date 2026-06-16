@@ -93,4 +93,6 @@ async def get_session_data(session_id: str):
         "scores": json.loads(row["scores"]) if row.get("scores") and row["scores"] != "{}" else None,
         "optimized_resume": row.get("optimized_resume", ""),
         "jd_match_result": json.loads(row["jd_match_result"]) if row.get("jd_match_result") and row["jd_match_result"] != "{}" else None,
+        "jd_optimized_text": row.get("jd_optimized_text", ""),
+        "cover_letter": row.get("cover_letter", ""),
     }

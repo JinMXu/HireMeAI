@@ -19,30 +19,30 @@ export default function InterviewReportPage() {
     interviewId?: string;
   } | null;
 
+  const interviewId = state?.interviewId;
   const [report, setReport] = useState<EvaluationReport | null>(state?.report || null);
   const [messages, setMessages] = useState<InterviewMessage[]>([]);
   const [loading, setLoading] = useState(!state?.report);
 
   useEffect(() => {
     if (report) return; // Already have report from state (post-interview flow)
-    if (!state?.interviewId) {
+    if (!interviewId) {
       navigate('/interview');
       return;
     }
-    getInterviewDetail(state.interviewId)
+    getInterviewDetail(interviewId)
       .then((res) => {
         setReport(res.report);
         setMessages(res.messages);
       })
       .catch(() => navigate('/interview'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [interviewId, navigate, report]);
 
   if (loading) {
     return <div className="text-center text-muted-foreground py-20">加载中...</div>;
   }
   if (!report) {
-    navigate('/interview');
     return null;
   }
 

@@ -1,11 +1,12 @@
 import sqlite3
 import json
 import logging
+from pathlib import Path
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = "hireme.db"
+DB_PATH = Path(__file__).resolve().parents[2] / "hireme.db"
 
 
 def get_db() -> sqlite3.Connection:

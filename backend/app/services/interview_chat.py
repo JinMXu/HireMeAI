@@ -1,8 +1,8 @@
+import asyncio
 import re
 import uuid
 import json
 import logging
-import time
 from typing import AsyncGenerator
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.teams import SelectorGroupChat, RoundRobinGroupChat
@@ -183,12 +183,21 @@ class InterviewChatManager:
             role="interviewer", agent_id=first_iv.id,
             agent_name=f"{first_iv.name}（{first_iv.title}）", content=opening,
         )
+        first_msg = first_message.model_dump()
+        session = get_interview_session(interview_id)
+        if session:
+            session["message_history"].append(first_msg)
+        db_save_message(interview_id, first_msg)
         return interview_id, first_message
 
     async def send_message_stream(self, interview_id: str, content: str) -> AsyncGenerator[str, None]:
         session = get_interview_session(interview_id)
         if not session:
             yield f"data: {json.dumps({'type': 'error', 'message': 'Interview not found'})}\n\n"
+            return
+        if session.get("_runtime_missing"):
+            yield f"data: {json.dumps({'type': 'error', 'message': '面试运行状态已丢失，请结束当前面试生成报告，或重新开始一场面试。'}, ensure_ascii=False)}\n\n"
+            yield "data: [DONE]\n\n"
             return
         if session.get("is_processing"):
             yield f"data: {json.dumps({'type': 'error', 'message': '面试官还在思考上一个问题，请稍候...'})}\n\n"
@@ -243,12 +252,21 @@ class InterviewChatManager:
         reply_agent_id = None
         task_result = None
         yielded_clean_len = 0
-        last_chunk_time = time.monotonic()
 
         try:
-            async for message in stream:
-                last_chunk_time = time.monotonic()
-
+            stream_iter = stream.__aiter__()
+            while True:
+                try:
+                    message = await asyncio.wait_for(anext(stream_iter), timeout=STREAM_CHUNK_TIMEOUT)
+                except StopAsyncIteration:
+                    break
+                except asyncio.TimeoutError:
+                    close = getattr(stream_iter, "aclose", None)
+                    if close:
+                        await close()
+                    yield f"data: {json.dumps({'type': 'error', 'message': '面试官回复超时，请重试'}, ensure_ascii=False)}\n\n"
+                    yield "data: [DONE]\n\n"
+                    return
                 if hasattr(message, "content") and hasattr(message, "type") and message.type == "ModelClientStreamingChunkEvent":
                     chunk_buffer.append(message.content)
                     if hasattr(message, "source") and message.source not in ("candidate", "user"):
@@ -274,14 +292,10 @@ class InterviewChatManager:
                 if hasattr(message, "messages"):
                     task_result = message
 
-                if time.monotonic() - last_chunk_time > STREAM_CHUNK_TIMEOUT:
-                    break
-
         except Exception as exc:
             logger.exception("Stream iteration error")
             yield f"data: {json.dumps({'type': 'error', 'message': f'流中断: {str(exc)}'})}\n\n"
             yield "data: [DONE]\n\n"
-            message_history.pop()
             return
 
         # 4. Build final reply
