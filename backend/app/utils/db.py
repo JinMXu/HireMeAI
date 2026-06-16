@@ -9,17 +9,11 @@ logger = logging.getLogger(__name__)
 DB_PATH = Path(__file__).resolve().parents[2] / "hireme.db"
 
 
-def get_db() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
-    return conn
-
-
-def init_db():
-    conn = get_db()
-    conn.executescript("""
+MIGRATIONS: list[tuple[int, str, str]] = [
+    (
+        1,
+        "initial_schema",
+        """
         CREATE TABLE IF NOT EXISTS user_sessions (
             id TEXT PRIMARY KEY,
             created_at TEXT NOT NULL,
@@ -66,10 +60,51 @@ def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_messages_interview ON interview_messages(interview_id);
         CREATE INDEX IF NOT EXISTS idx_sessions_user ON interview_sessions(session_id);
-    """)
-    conn.commit()
-    conn.close()
+        """,
+    ),
+]
+
+
+def get_db() -> sqlite3.Connection:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys=ON")
+    return conn
+
+
+def init_db():
+    conn = get_db()
+    try:
+        _apply_migrations(conn)
+    finally:
+        conn.close()
     logger.info("Database initialized at %s", DB_PATH)
+
+
+def _apply_migrations(conn: sqlite3.Connection) -> None:
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS schema_migrations (
+            version INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            applied_at TEXT NOT NULL
+        )
+    """)
+    applied = {
+        row["version"]
+        for row in conn.execute("SELECT version FROM schema_migrations").fetchall()
+    }
+
+    for version, name, sql in MIGRATIONS:
+        if version in applied:
+            continue
+        logger.info("Applying database migration %s: %s", version, name)
+        conn.executescript(sql)
+        conn.execute(
+            "INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)",
+            (version, name, _now()),
+        )
+        conn.commit()
 
 
 def _now() -> str:
