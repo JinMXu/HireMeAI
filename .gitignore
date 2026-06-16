@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+venv/
+
+# Environment (API keys)
+.env
+!.env.example
+
+# SQLite database
+*.db
+
+# Node
+node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# OS
+Thumbs.db
+
+# Claude Code
+.agent/
+.claude/
+
+# Dev brainstorming
+.superpowers/
