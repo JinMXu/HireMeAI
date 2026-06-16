@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/appStore';
 import { matchJD, optimizeForJD } from '@/api/client';
@@ -13,19 +13,28 @@ export default function JDMatchPage() {
   const { sessionId, jdText, matchResult, setJdText, setMatchResult } = useAppStore();
   const [input, setInput] = useState(jdText || '');
   const [loading, setLoading] = useState(false);
+  const [matchError, setMatchError] = useState('');
   const [optimizeResult, setOptimizeResult] = useState<JDOptimizeResult | null>(null);
   const [optimizing, setOptimizing] = useState(false);
+  const [optimizeError, setOptimizeError] = useState('');
   const navigate = useNavigate();
 
-  if (!sessionId) { navigate('/'); return null; }
+  useEffect(() => {
+    if (!sessionId) navigate('/');
+  }, [sessionId, navigate]);
+
+  if (!sessionId) return null;
 
   const handleMatch = async () => {
     if (input.trim().length < 20) return;
     setLoading(true);
+    setMatchError('');
     setJdText(input);
     try {
       const res = await matchJD(sessionId, input);
       setMatchResult(res);
+    } catch {
+      setMatchError('JD 匹配分析失败，请重试');
     } finally {
       setLoading(false);
     }
@@ -33,9 +42,12 @@ export default function JDMatchPage() {
 
   const handleOptimize = async () => {
     setOptimizing(true);
+    setOptimizeError('');
     try {
       const res = await optimizeForJD(sessionId, input);
       setOptimizeResult(res);
+    } catch {
+      setOptimizeError('针对 JD 优化失败，请重试');
     } finally {
       setOptimizing(false);
     }
@@ -64,6 +76,14 @@ export default function JDMatchPage() {
           >
             {loading ? '分析中...' : '匹配分析'}
           </Button>
+          {matchError && (
+            <div className="flex items-center gap-3 text-sm text-destructive">
+              <span>{matchError}</span>
+              <Button onClick={handleMatch} variant="outline" size="sm" disabled={loading}>
+                重试
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -110,6 +130,14 @@ export default function JDMatchPage() {
             >
               {optimizing ? '优化中...' : '针对JD优化简历'}
             </Button>
+            {optimizeError && (
+              <div className="flex items-center gap-3 text-sm text-destructive">
+                <span>{optimizeError}</span>
+                <Button onClick={handleOptimize} variant="outline" size="sm" disabled={optimizing}>
+                  重试
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

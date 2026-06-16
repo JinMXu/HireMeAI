@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/appStore';
 import { generateCoverLetter } from '@/api/client';
@@ -11,16 +11,27 @@ export default function CoverLetterPage() {
   const [companyName, setCompanyName] = useState('');
   const [positionName, setPositionName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  if (!sessionId) { navigate('/'); return null; }
-  if (!jdText) { navigate('/jd-match'); return null; }
+  useEffect(() => {
+    if (!sessionId) {
+      navigate('/');
+    } else if (!jdText) {
+      navigate('/jd-match');
+    }
+  }, [sessionId, jdText, navigate]);
+
+  if (!sessionId || !jdText) return null;
 
   const handleGenerate = async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await generateCoverLetter(sessionId, jdText, companyName || undefined, positionName || undefined);
       setCoverLetter(res.cover_letter);
+    } catch {
+      setError('求职信生成失败，请重试');
     } finally {
       setLoading(false);
     }
@@ -51,6 +62,14 @@ export default function CoverLetterPage() {
           >
             {loading ? '生成中...' : coverLetter ? '重新生成' : '生成求职信'}
           </Button>
+          {error && (
+            <div className="flex items-center gap-3 text-sm text-destructive">
+              <span>{error}</span>
+              <Button onClick={handleGenerate} variant="outline" size="sm" disabled={loading}>
+                重试生成
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

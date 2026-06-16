@@ -16,12 +16,13 @@ export default function InterviewChatPage() {
 
   const state = location.state as {
     interviewId: string;
-    firstMessage: InterviewMessage;
+    firstMessage?: InterviewMessage;
+    initialMessages?: InterviewMessage[];
     interviewers: InterviewerAgent[];
   } | null;
 
   const [messages, setMessages] = useState<InterviewMessage[]>(
-    state?.firstMessage ? [state.firstMessage] : []
+    state?.initialMessages?.length ? state.initialMessages : state?.firstMessage ? [state.firstMessage] : []
   );
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -183,6 +184,13 @@ export default function InterviewChatPage() {
           />
           <Button onClick={handleSend} disabled={sending || !input.trim()} className="self-end">
             {sending ? '...' : '发送'}
+          </Button>
+        </div>
+      )}
+      {streamError && isComplete && (
+        <div className="text-center mt-3">
+          <Button onClick={handleEnd} variant="outline" size="sm">
+            重试生成报告
           </Button>
         </div>
       )}

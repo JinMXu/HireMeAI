@@ -18,6 +18,35 @@ from app.services.interview_eval import generate_evaluation
 router = APIRouter()
 
 
+def _interview_meta(
+    status: str | None,
+    has_report: bool,
+    message_count: int,
+    runtime_missing: bool,
+) -> dict:
+    is_active = status == "active"
+    can_continue = is_active and not runtime_missing
+    can_end = not has_report and message_count > 1
+
+    if has_report:
+        action = "view_report"
+    elif can_continue:
+        action = "continue"
+    elif can_end:
+        action = "generate_report"
+    else:
+        action = "unavailable"
+
+    return {
+        "has_report": has_report,
+        "message_count": message_count,
+        "runtime_missing": runtime_missing,
+        "can_continue": can_continue,
+        "can_end": can_end,
+        "action": action,
+    }
+
+
 @router.post("/setup", response_model=InterviewSetupResponse)
 async def setup_interview(req: InterviewSetupRequest):
     session = get_session(req.session_id)
@@ -55,14 +84,22 @@ async def end_interview(req: InterviewEndRequest):
     if not session_data:
         raise HTTPException(404, "Interview session not found.")
 
+    existing_report = get_interview_report(req.interview_id)
+    if existing_report:
+        return InterviewEndResponse(
+            interview_id=req.interview_id,
+            report=EvaluationReport(**existing_report),
+        )
+
     conversation = await interview_chat.end_interview(req.interview_id)
+    if not any(msg.get("role") == "candidate" for msg in conversation):
+        raise HTTPException(422, "Interview has no candidate answers to evaluate.")
 
     resume_text = ""
     jd_text = ""
-    if not session_data.get("_is_historical"):
-        session = get_session(session_data.get("session_id", ""))
-        resume_text = session.resume_text if session else ""
-        jd_text = session.jd_text if session else ""
+    session = get_session(session_data.get("session_id", ""))
+    resume_text = session.resume_text if session else ""
+    jd_text = session.jd_text if session else ""
 
     report = await generate_evaluation(conversation, resume_text, jd_text)
 
@@ -76,12 +113,20 @@ async def end_interview(req: InterviewEndRequest):
 @router.get("/history")
 async def interview_history(session_id: str = Query(...)):
     interviews = list_interviews_by_user(session_id)
-    # Attach report summary to each entry
     result = []
     for iv in interviews:
         entry = dict(iv)
         report = get_interview_report(iv["id"])
+        messages = get_interview_messages(iv["id"])
+        session_data = get_interview_session(iv["id"])
+        runtime_missing = bool(session_data and session_data.get("_runtime_missing"))
         entry["overall_score"] = report.get("overall_score") if report else None
+        entry.update(_interview_meta(
+            status=entry.get("status"),
+            has_report=report is not None,
+            message_count=len(messages),
+            runtime_missing=runtime_missing,
+        ))
         result.append(entry)
     return {"interviews": result}
 
@@ -92,24 +137,26 @@ async def get_interview_detail(interview_id: str):
     if not session_data:
         raise HTTPException(404, "Interview not found.")
 
-    if session_data.get("_is_historical"):
-        return {
-            "interview_id": interview_id,
-            "messages": session_data.get("message_history", []),
-            "report": session_data.get("report"),
-            "mode": session_data.get("mode"),
-            "difficulty": session_data.get("difficulty"),
-        }
-
     # Active session — fetch from DB
     db_row = get_interview_session_db(interview_id)
     messages = get_interview_messages(interview_id)
     report = get_interview_report(interview_id)
+    status = db_row.get("status") if db_row else session_data.get("status", "active")
+    runtime_missing = bool(session_data.get("_runtime_missing"))
+    meta = _interview_meta(
+        status=status,
+        has_report=report is not None,
+        message_count=len(messages),
+        runtime_missing=runtime_missing,
+    )
 
     return {
         "interview_id": interview_id,
         "messages": messages,
         "report": report,
+        "status": status,
         "mode": db_row.get("mode") if db_row else None,
         "difficulty": db_row.get("difficulty") if db_row else None,
+        "interviewers": session_data.get("interviewers", []),
+        **meta,
     }

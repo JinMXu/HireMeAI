@@ -15,6 +15,20 @@ export default function ResumePage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const runScore = async () => {
+    if (!sessionId) return;
+    setLoading(true);
+    setError('');
+    try {
+      const result = await scoreResume(sessionId);
+      setScores(result);
+    } catch {
+      setError('简历评分失败，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!sessionId) { navigate('/'); return; }
     if (scores) return;
@@ -51,7 +65,16 @@ export default function ResumePage() {
   };
 
   if (loading) return <div className="text-center py-12 text-muted-foreground">正在评分中...</div>;
-  if (error) return <div className="text-center py-12 text-destructive">{error}</div>;
+  if (error) {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={runScore} variant="outline">
+          重试评分
+        </Button>
+      </div>
+    );
+  }
   if (!scores) return null;
 
   const chartData = scores.dimensions.map((d) => ({ name: d.name, score: d.score }));

@@ -253,6 +253,12 @@ export interface InterviewHistoryItem {
   created_at: string;
   ended_at: string | null;
   overall_score: number | null;
+  has_report: boolean;
+  message_count: number;
+  runtime_missing: boolean;
+  can_continue: boolean;
+  can_end: boolean;
+  action: 'continue' | 'generate_report' | 'view_report' | 'unavailable';
 }
 
 export interface InterviewHistoryResponse {
@@ -263,8 +269,16 @@ export interface InterviewDetailResponse {
   interview_id: string;
   messages: InterviewMessage[];
   report: EvaluationReport | null;
+  status: string;
   mode: string;
   difficulty: string;
+  interviewers: InterviewerAgent[];
+  has_report: boolean;
+  message_count: number;
+  runtime_missing: boolean;
+  can_continue: boolean;
+  can_end: boolean;
+  action: 'continue' | 'generate_report' | 'view_report' | 'unavailable';
 }
 
 export async function getInterviewHistory(sessionId: string): Promise<InterviewHistoryResponse> {
