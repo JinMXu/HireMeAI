@@ -5,7 +5,7 @@ from typing import Optional
 class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
-    deepseek_model: str = "deepseek-chat"
+    deepseek_model: str = "deepseek-v4-pro"
     max_file_size_mb: int = 10
     session_ttl_minutes: int = 60
 

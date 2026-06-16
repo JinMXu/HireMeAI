@@ -69,7 +69,7 @@ class LLMService:
 
     @staticmethod
     def _strip_thinking(text: str | None) -> str:
-        """Remove thinking tags from model output (DeepSeek-R1 / reasoning models)."""
+        """Remove thinking tags from model output (reasoning models)."""
         if not text:
             return ""
         text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)

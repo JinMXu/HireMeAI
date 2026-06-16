@@ -69,8 +69,8 @@ npm run dev
 |------|------|--------|
 | `DEEPSEEK_API_KEY` | DeepSeek API 密钥 | — |
 | `DEEPSEEK_BASE_URL` | API 地址 | `https://api.deepseek.com` |
-| `DEEPSEEK_MODEL` | 模型名称 | `deepseek-chat` |
-| `MODEL_FAMILY` | 模型系列（推理模型需设为 `r1`） | `r1` |
+| `DEEPSEEK_MODEL` | 模型名称 | `deepseek-v4-pro` |
+| `MODEL_FAMILY` | 模型系列 | `v4` |
 | `MAX_FILE_SIZE_MB` | 上传文件大小上限 | `10` |
 | `SESSION_TTL_MINUTES` | 会话过期时间 | `60` |
 

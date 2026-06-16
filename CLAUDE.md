@@ -6,7 +6,7 @@ AI 驱动的全流程简历优化与模拟面试工具。后端 Python FastAPI +
 
 ## 关键架构决策
 
-- **LLM**: DeepSeek API（兼容 OpenAI SDK），推理模型（MODEL_FAMILY=r1）会输出 `<think>` 标签，所有 LLM 响应需要 strip
+- **LLM**: DeepSeek API（兼容 OpenAI SDK），使用 `deepseek-v4-pro` 模型。`<think>` 标签 strip 逻辑已内置作为安全兜底
 - **Agent 框架**: Microsoft AutoGen (`autogen-agentchat>=0.7.0`)，`AssistantAgent` + `RoundRobinGroupChat`/`SelectorGroupChat`
 - **1v1 面试**: 使用 `agent.run_stream(task=msg)` 直接调用，避免 GroupChat 自循环
 - **Panel 面试**: `RoundRobinGroupChat(max_turns=1)`，每轮一位面试官发言，跨轮次轮换
@@ -45,6 +45,6 @@ frontend/src/
 - **`InterviewerAgent` 是 Pydantic 模型，存 SQLite 前需 `.model_dump()`**
 - **`max_turns` 的 `stop_reason` 含 `"max"` 子串，需排除 `"turn"` 才判为硬上限**
 - **`RoundRobinGroupChat` 1 agent = 自循环，1v1 必须用 `agent.run_stream()`**
-- **DeepSeek-R1 的 `<think>` 标签在 `llm.py` 全局 strip，流式在 `interview_chat.py` 实时strip**
+- **`<think>` 标签在 `llm.py` 全局 strip，流式在 `interview_chat.py` 实时 strip**
 - **`session["is_processing"]` 防止并发发送，前端 `sending` 状态锁双重保护**
 - **Panel 模式每轮 `max_turns=1`，面试官跨轮 RoundRobin 轮换**
