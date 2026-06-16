@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.routers import resume, jd_match, interview, cover_letter
-from app.services.llm import LLMJSONError
+from app.services.llm import LLMJSONError, LLMTransientError
 from app.utils.db import init_db
 
 
@@ -42,6 +42,17 @@ async def llm_json_error_handler(_, exc: LLMJSONError):
         status_code=502,
         content={
             "detail": "AI 返回格式异常，请重试。",
+            "error": str(exc),
+        },
+    )
+
+
+@app.exception_handler(LLMTransientError)
+async def llm_transient_error_handler(_, exc: LLMTransientError):
+    return JSONResponse(
+        status_code=502,
+        content={
+            "detail": "AI 服务暂时不可用，请稍后重试。",
             "error": str(exc),
         },
     )

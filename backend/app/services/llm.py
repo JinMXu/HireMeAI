@@ -1,7 +1,15 @@
 import json
+import asyncio
+import random
 import re
 import logging
-from openai import AsyncOpenAI
+from openai import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AsyncOpenAI,
+    RateLimitError,
+)
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from app.config import settings
 
@@ -12,16 +20,22 @@ class LLMJSONError(RuntimeError):
     """Raised when the model response cannot be parsed as valid JSON."""
 
 
+class LLMTransientError(RuntimeError):
+    """Raised when the model API remains unavailable after retries."""
+
+
 class LLMService:
     def __init__(self):
         self.client = AsyncOpenAI(
             api_key=settings.deepseek_api_key,
             base_url=settings.deepseek_base_url,
+            max_retries=0,
+            timeout=settings.llm_request_timeout_seconds,
         )
         self.model = settings.deepseek_model
 
     async def chat(self, system: str, user: str, temperature: float = 0.7) -> str:
-        response = await self.client.chat.completions.create(
+        response = await self._create_completion(
             model=self.model,
             messages=[
                 {"role": "system", "content": system},
@@ -64,8 +78,49 @@ class LLMService:
         )
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
-        response = await self.client.chat.completions.create(**kwargs)
+        response = await self._create_completion(**kwargs)
         return self._strip_thinking(response.choices[0].message.content or "")
+
+    async def _create_completion(self, **kwargs):
+        last_error: Exception | None = None
+        max_attempts = max(settings.llm_max_retries, 0) + 1
+
+        for attempt in range(max_attempts):
+            try:
+                return await self.client.chat.completions.create(**kwargs)
+            except (APIConnectionError, APITimeoutError, RateLimitError) as exc:
+                last_error = exc
+            except APIStatusError as exc:
+                if not self._is_retryable_status(exc.status_code):
+                    raise
+                last_error = exc
+
+            if attempt >= max_attempts - 1:
+                break
+
+            delay = self._retry_delay(attempt)
+            logger.warning(
+                "Transient LLM API error on attempt %s/%s; retrying in %.2fs: %s",
+                attempt + 1,
+                max_attempts,
+                delay,
+                type(last_error).__name__,
+            )
+            await asyncio.sleep(delay)
+
+        raise LLMTransientError(
+            f"LLM API unavailable after {max_attempts} attempts: {type(last_error).__name__}"
+        ) from last_error
+
+    @staticmethod
+    def _is_retryable_status(status_code: int) -> bool:
+        return status_code == 429 or status_code in {500, 502, 503, 504}
+
+    @staticmethod
+    def _retry_delay(attempt: int) -> float:
+        base = max(settings.llm_retry_base_seconds, 0.0)
+        jitter = random.uniform(0, base / 2) if base else 0.0
+        return base * (2 ** attempt) + jitter
 
     @staticmethod
     def _extract_json(raw: str) -> str:

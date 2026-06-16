@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-pro"
+    llm_request_timeout_seconds: float = 60.0
+    llm_max_retries: int = 2
+    llm_retry_base_seconds: float = 0.8
     max_file_size_mb: int = 10
     session_ttl_minutes: int = 60
 
@@ -16,6 +19,7 @@ class Settings(BaseSettings):
     model_has_vision: bool = False
     model_has_function_calling: bool = False
     model_has_json_output: bool = True
+    model_has_structured_output: bool = False
     model_family: str = "unknown"
 
     @property
@@ -24,6 +28,7 @@ class Settings(BaseSettings):
             "vision": self.model_has_vision,
             "function_calling": self.model_has_function_calling,
             "json_output": self.model_has_json_output,
+            "structured_output": self.model_has_structured_output,
             "family": self.model_family,
         }
 
