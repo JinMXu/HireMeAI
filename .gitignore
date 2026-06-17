@@ -30,6 +30,8 @@ Thumbs.db
 # Claude Code
 .agent/
 .claude/
+AGENTS.md
+CLAUDE.md
 
 # Dev brainstorming
 .superpowers/
