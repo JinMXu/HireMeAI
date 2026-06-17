@@ -1,31 +1,30 @@
 ---
-name: Bug report
-about: Report a reproducible problem
+name: Bug 反馈
+about: 反馈一个可复现的问题
 title: "[Bug]: "
 labels: bug
 assignees: ""
 ---
 
-## What happened?
+## 问题描述
 
 
-## Steps to reproduce
+## 复现步骤
 
 1. 
 2. 
 3. 
 
-## Expected behavior
+## 预期行为
 
 
-## Environment
+## 环境信息
 
-- OS:
-- Python version:
-- Node version:
-- Browser:
+- 操作系统：
+- Python 版本：
+- Node.js 版本：
+- 浏览器：
 
-## Logs or screenshots
+## 日志或截图
 
-Please remove API keys, resumes, job descriptions, interview transcripts, and
-other personal data before sharing logs or screenshots.
+分享日志或截图前，请移除 API Key、真实简历、岗位 JD、面试记录和其他个人敏感信息。

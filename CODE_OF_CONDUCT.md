@@ -1,27 +1,23 @@
-# Code of Conduct
+# 行为准则
 
-## Our Pledge
+## 我们的承诺
 
-We want HireMe.AI to be a welcoming, respectful project for everyone. We expect
-contributors and maintainers to communicate with patience, empathy, and good
-faith.
+我们希望 HireMe.AI 成为一个友好、尊重、开放的项目。贡献者和维护者都应以耐心、善意和建设性的方式沟通。
 
-## Expected Behavior
+## 鼓励的行为
 
-- Be respectful of different backgrounds, skill levels, and viewpoints.
-- Give constructive feedback.
-- Keep discussions focused on the project and its users.
-- Respect privacy. Do not share personal resumes, job descriptions, interview
-  transcripts, secrets, or other sensitive data without permission.
+- 尊重不同背景、经验水平和观点。
+- 提供具体、建设性的反馈。
+- 让讨论聚焦于项目、代码和用户价值。
+- 尊重隐私，不在未经允许的情况下分享他人的简历、岗位描述、面试记录、密钥或其他敏感数据。
 
-## Unacceptable Behavior
+## 不接受的行为
 
-- Harassment, intimidation, or discriminatory language.
-- Personal attacks or repeated disruptive behavior.
-- Publishing private information without explicit consent.
-- Sharing credentials, API keys, or sensitive user data.
+- 骚扰、威胁、歧视性表达或人身攻击。
+- 持续扰乱讨论或恶意消耗维护者精力。
+- 未经允许公开他人的私人信息。
+- 分享凭证、API Key 或敏感用户数据。
 
-## Enforcement
+## 执行方式
 
-Maintainers may remove comments, close issues, reject contributions, or block
-participants who violate this code of conduct.
+维护者可以删除不当评论、关闭 Issue、拒绝贡献，或限制违反行为准则的参与者继续参与项目。

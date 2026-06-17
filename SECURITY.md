@@ -1,35 +1,28 @@
-# Security Policy
+# 安全政策
 
-## Reporting a Vulnerability
+## 报告安全问题
 
-Please report security issues privately to the repository owner through
-GitHub. Do not open a public issue for vulnerabilities that expose secrets,
-private documents, or user data.
+如果你发现安全漏洞，请尽量通过 GitHub 提供的私密渠道联系仓库维护者。不要在公开 Issue 中披露可能暴露密钥、隐私文档或用户数据的漏洞细节。
 
-When reporting, include:
+报告时建议包含：
 
-- A short description of the issue.
-- Steps to reproduce it.
-- The affected area, such as backend API, frontend upload flow, local storage,
-  SQLite persistence, or LLM integration.
-- Any suggested mitigation, if known.
+- 问题的简要描述。
+- 可复现步骤。
+- 受影响范围，例如后端 API、前端上传流程、localStorage、SQLite 持久化或 LLM 集成。
+- 如果有已知修复建议，也可以一并提供。
 
-## Sensitive Data
+## 敏感数据
 
-HireMe.AI processes resumes, job descriptions, interview messages, and AI
-generated feedback. Treat all of that content as sensitive.
+HireMe.AI 会处理简历、岗位描述、面试消息和 AI 反馈。这些内容都应视为敏感数据。
 
-Do not commit:
+请不要提交：
 
-- Real resumes or job descriptions.
-- DeepSeek API keys or other credentials.
-- `.env` files.
-- SQLite database files such as `backend/hireme.db`.
-- Generated logs or exports containing personal data.
+- 真实简历或岗位描述。
+- DeepSeek API Key 或其他凭证。
+- `.env` 文件。
+- `backend/hireme.db` 等 SQLite 数据库文件。
+- 包含个人信息的日志、导出文件或截图。
 
-## LLM and Privacy Notes
+## LLM 与隐私说明
 
-Local usage sends resume, JD, interview, and related prompt content to the
-configured DeepSeek-compatible API endpoint. Users are responsible for
-reviewing their LLM provider's privacy and retention policies before using
-real personal data.
+本地使用时，简历、JD、面试内容以及相关提示词会发送到你配置的 DeepSeek 兼容 API。使用真实个人数据前，请确认对应 LLM 服务商的数据使用、存储和隐私政策。
