@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ResumeDownloadButtons } from '@/components/shared/ResumeDownloadButtons';
 
 export default function JDMatchPage() {
   const { sessionId, jdText, matchResult, setJdText, setMatchResult } = useAppStore();
@@ -145,7 +146,14 @@ export default function JDMatchPage() {
       {optimizeResult && (
         <Card>
           <CardHeader>
-            <CardTitle>优化后简历 (预估匹配度: {optimizeResult.new_match_percentage}%)</CardTitle>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle>优化后简历 (预估匹配度: {optimizeResult.new_match_percentage}%)</CardTitle>
+              <ResumeDownloadButtons
+                text={optimizeResult.optimized_text}
+                baseFilename="optimized-resume-jd"
+                title="JD 优化后简历"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <pre className="bg-muted p-4 rounded-lg text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">{optimizeResult.optimized_text}</pre>

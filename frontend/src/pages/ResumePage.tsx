@@ -6,6 +6,7 @@ import { scoreResume, optimizeResume } from '@/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { ResumeDownloadButtons } from '@/components/shared/ResumeDownloadButtons';
 
 export default function ResumePage() {
   const { sessionId, scores, optimizedResume, setScores, setOptimizedResume } = useAppStore();
@@ -138,15 +139,24 @@ export default function ResumePage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>AI 优化</CardTitle>
-            <Button
-              onClick={handleOptimize}
-              disabled={optimizing}
-              size="sm"
-            >
-              {optimizing ? '优化中...' : optimizedResume ? '重新优化' : '一键优化'}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              {optimizedResume && (
+                <ResumeDownloadButtons
+                  text={optimizedResume}
+                  baseFilename="optimized-resume-score"
+                  title="优化后简历"
+                />
+              )}
+              <Button
+                onClick={handleOptimize}
+                disabled={optimizing}
+                size="sm"
+              >
+                {optimizing ? '优化中...' : optimizedResume ? '重新优化' : '一键优化'}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
