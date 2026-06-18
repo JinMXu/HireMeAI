@@ -1,12 +1,16 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.config import settings
 from app.routers import resume, jd_match, interview, cover_letter
 from app.services.llm import LLMJSONError, LLMTransientError
 from app.utils.db import init_db
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -24,10 +28,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[o.strip() for o in settings.allowed_origins.split(",") if o.strip()],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 app.include_router(resume.router, prefix="/api/resume", tags=["resume"])
@@ -38,23 +42,19 @@ app.include_router(cover_letter.router, prefix="/api/cover-letter", tags=["cover
 
 @app.exception_handler(LLMJSONError)
 async def llm_json_error_handler(_, exc: LLMJSONError):
+    logger.warning("LLM JSON error: %s", exc)
     return JSONResponse(
         status_code=502,
-        content={
-            "detail": "AI 返回格式异常，请重试。",
-            "error": str(exc),
-        },
+        content={"detail": "AI 返回格式异常，请重试。"},
     )
 
 
 @app.exception_handler(LLMTransientError)
 async def llm_transient_error_handler(_, exc: LLMTransientError):
+    logger.warning("LLM transient error: %s", exc)
     return JSONResponse(
         status_code=502,
-        content={
-            "detail": "AI 服务暂时不可用，请稍后重试。",
-            "error": str(exc),
-        },
+        content={"detail": "AI 服务暂时不可用，请稍后重试。"},
     )
 
 

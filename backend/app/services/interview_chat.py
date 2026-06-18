@@ -208,7 +208,7 @@ class InterviewChatManager:
                 yield event
         except Exception as exc:
             logger.exception("Unexpected error in message stream")
-            yield f"data: {json.dumps({'type': 'error', 'message': f'处理消息时出错: {str(exc)}'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': '处理消息时出错，请重试。'}, ensure_ascii=False)}\n\n"
             yield "data: [DONE]\n\n"
         finally:
             session["is_processing"] = False
@@ -294,7 +294,7 @@ class InterviewChatManager:
 
         except Exception as exc:
             logger.exception("Stream iteration error")
-            yield f"data: {json.dumps({'type': 'error', 'message': f'流中断: {str(exc)}'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': '面试官回复中断，请重试。'}, ensure_ascii=False)}\n\n"
             yield "data: [DONE]\n\n"
             return
 

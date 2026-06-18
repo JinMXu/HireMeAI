@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     max_file_size_mb: int = 10
     session_ttl_minutes: int = 60
 
+    # CORS — comma-separated list of allowed origins. Defaults to the Vite dev
+    # server; override via ALLOWED_ORIGINS in production (e.g. "https://hireme.example.com").
+    allowed_origins: str = "http://localhost:5173"
+
     # LLM capability hints — overridable per model via .env
     model_has_vision: bool = False
     model_has_function_calling: bool = False
