@@ -3,7 +3,7 @@ from app.models.schemas import (
     ResumeUploadResponse, ResumeTextRequest, SessionRequest,
     ScoreResult, OptimizeResult,
 )
-from app.utils.session import create_session, get_session, update_session
+from app.utils.session import create_session, get_session, update_session, SESSION_ID_PATTERN
 from app.utils.db import get_user_session as db_get_user_session
 from app.services.parser import parse_pdf, parse_docx, clean_text
 from app.services.scorer import score_resume
@@ -81,6 +81,8 @@ async def optimize(req: SessionRequest):
 
 @router.get("/session/{session_id}")
 async def get_session_data(session_id: str):
+    if not SESSION_ID_PATTERN.match(session_id):
+        raise HTTPException(400, "Invalid session id format.")
     row = db_get_user_session(session_id)
     if not row:
         raise HTTPException(404, "Session not found.")

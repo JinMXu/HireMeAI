@@ -18,6 +18,17 @@ from app.services.interview_eval import generate_evaluation
 router = APIRouter()
 
 
+def _assert_ownership(interview_id: str, session_id: str) -> None:
+    """Verify the requester owns the interview (IDOR guard).
+
+    Compares the session_id bound to the stored interview against the one
+    supplied in the request. Raises 403 on mismatch or missing interview.
+    """
+    db_row = get_interview_session_db(interview_id)
+    if not db_row or db_row.get("session_id") != session_id:
+        raise HTTPException(403, "You do not have access to this interview.")
+
+
 def _interview_meta(
     status: str | None,
     has_report: bool,
@@ -71,6 +82,7 @@ async def start_interview(req: InterviewStartRequest):
 
 @router.post("/message")
 async def send_message(req: InterviewMessageRequest):
+    _assert_ownership(req.interview_id, req.session_id)
     try:
         stream = interview_chat.send_message_stream(req.interview_id, req.content)
     except ValueError as e:
@@ -83,6 +95,7 @@ async def end_interview(req: InterviewEndRequest):
     session_data = get_interview_session(req.interview_id)
     if not session_data:
         raise HTTPException(404, "Interview session not found.")
+    _assert_ownership(req.interview_id, req.session_id)
 
     existing_report = get_interview_report(req.interview_id)
     if existing_report:
@@ -132,10 +145,11 @@ async def interview_history(session_id: str = Query(...)):
 
 
 @router.get("/{interview_id}")
-async def get_interview_detail(interview_id: str):
+async def get_interview_detail(interview_id: str, session_id: str = Query(...)):
     session_data = get_interview_session(interview_id)
     if not session_data:
         raise HTTPException(404, "Interview not found.")
+    _assert_ownership(interview_id, session_id)
 
     # Active session — fetch from DB
     db_row = get_interview_session_db(interview_id)

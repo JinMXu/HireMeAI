@@ -122,11 +122,13 @@ class InterviewStartResponse(BaseModel):
 
 class InterviewMessageRequest(BaseModel):
     interview_id: str
+    session_id: str  # ownership check: must match the interview's session
     content: str
 
 
 class InterviewEndRequest(BaseModel):
     interview_id: str
+    session_id: str  # ownership check: must match the interview's session
 
 
 class InterviewMessageResponse(BaseModel):

@@ -178,6 +178,7 @@ export async function startInterview(
 
 export async function sendInterviewMessage(
   interview_id: string,
+  session_id: string,
   content: string,
   onStatus: (msg: string) => void,
   onChunk: (content: string, agentId?: string) => void,
@@ -188,7 +189,7 @@ export async function sendInterviewMessage(
   const response = await fetch('/api/interview/message', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ interview_id, content }),
+    body: JSON.stringify({ interview_id, session_id, content }),
   });
 
   if (!response.ok) {
@@ -237,9 +238,10 @@ export async function sendInterviewMessage(
 }
 
 export async function endInterview(
-  interview_id: string
+  interview_id: string,
+  session_id: string,
 ): Promise<InterviewEndResponse> {
-  const { data } = await api.post('/interview/end', { interview_id });
+  const { data } = await api.post('/interview/end', { interview_id, session_id });
   return data;
 }
 
@@ -286,8 +288,8 @@ export async function getInterviewHistory(sessionId: string): Promise<InterviewH
   return data;
 }
 
-export async function getInterviewDetail(interviewId: string): Promise<InterviewDetailResponse> {
-  const { data } = await api.get(`/interview/${interviewId}`);
+export async function getInterviewDetail(interviewId: string, sessionId: string): Promise<InterviewDetailResponse> {
+  const { data } = await api.get(`/interview/${interviewId}`, { params: { session_id: sessionId } });
   return data;
 }
 

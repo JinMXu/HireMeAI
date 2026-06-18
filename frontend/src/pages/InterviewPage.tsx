@@ -98,7 +98,7 @@ export default function InterviewPage() {
     setHistoryLoadingId(item.id);
     try {
       if (item.action === 'continue') {
-        const detail = await getInterviewDetail(item.id);
+        const detail = await getInterviewDetail(item.id, sessionId!);
         navigate('/interview/chat', {
           state: {
             interviewId: item.id,
@@ -111,7 +111,7 @@ export default function InterviewPage() {
       }
 
       if (item.action === 'generate_report') {
-        const res = await endInterview(item.id);
+        const res = await endInterview(item.id, sessionId!);
         navigate('/interview/report', { state: { report: res.report, interviewId: item.id } });
         return;
       }

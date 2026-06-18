@@ -69,6 +69,7 @@ export default function InterviewChatPage() {
     try {
       await sendInterviewMessage(
         state.interviewId,
+        sessionId!,
         content,
         (msg) => setTypingStatus(msg),
         (chunk, agentId) => {
@@ -108,7 +109,7 @@ export default function InterviewChatPage() {
   const handleEnd = async () => {
     if (!state) return;
     try {
-      const res = await endInterview(state.interviewId);
+      const res = await endInterview(state.interviewId, sessionId!);
       navigate('/interview/report', { state: { report: res.report, interviewers: state.interviewers } });
     } catch {
       setStreamError('生成评估报告失败，请重试');

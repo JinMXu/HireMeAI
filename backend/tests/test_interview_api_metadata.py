@@ -77,7 +77,7 @@ def test_history_and_detail_include_action_metadata(client):
     assert item["can_end"] is False
     assert item["action"] == "continue"
 
-    detail = client.get("/api/interview/active-1").json()
+    detail = client.get("/api/interview/active-1", params={"session_id": "user-1"}).json()
     assert detail["status"] == "active"
     assert detail["runtime_missing"] is False
     assert detail["can_continue"] is True
@@ -106,7 +106,7 @@ def test_runtime_missing_active_interview_can_generate_report(client, monkeypatc
     assert item["can_end"] is True
     assert item["action"] == "generate_report"
 
-    ended = client.post("/api/interview/end", json={"interview_id": "lost-1"})
+    ended = client.post("/api/interview/end", json={"interview_id": "lost-1", "session_id": "user-1"})
     assert ended.status_code == 200
     assert ended.json()["report"]["overall_score"] == 82
 
@@ -122,7 +122,7 @@ def test_end_interview_returns_existing_report_without_regeneration(client, monk
 
     monkeypatch.setattr(interview_router, "generate_evaluation", fail_generate_evaluation)
 
-    response = client.post("/api/interview/end", json={"interview_id": "reported-1"})
+    response = client.post("/api/interview/end", json={"interview_id": "reported-1", "session_id": "user-1"})
     assert response.status_code == 200
     assert response.json()["report"]["overall_score"] == 82
 
@@ -131,5 +131,23 @@ def test_end_interview_rejects_conversation_without_candidate_answer(client):
     _create_user_session()
     _create_interview("empty-1")
 
-    response = client.post("/api/interview/end", json={"interview_id": "empty-1"})
+    response = client.post("/api/interview/end", json={"interview_id": "empty-1", "session_id": "user-1"})
     assert response.status_code == 422
+
+
+def test_interview_endpoints_reject_wrong_session(client):
+    """A session may not access another session's interview (IDOR guard)."""
+    _create_user_session()
+    _create_interview("owned-1", session_id="user-1")
+
+    # Detail endpoint: wrong session_id → 403
+    detail = client.get("/api/interview/owned-1", params={"session_id": "user-2"})
+    assert detail.status_code == 403
+
+    # End endpoint: wrong session_id → 403
+    ended = client.post("/api/interview/end", json={"interview_id": "owned-1", "session_id": "user-2"})
+    assert ended.status_code == 403
+
+    # Correct session_id still works (detail returns 200)
+    detail_ok = client.get("/api/interview/owned-1", params={"session_id": "user-1"})
+    assert detail_ok.status_code == 200

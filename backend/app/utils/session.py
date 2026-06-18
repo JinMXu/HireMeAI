@@ -1,4 +1,5 @@
 import uuid
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
@@ -8,6 +9,10 @@ from app.utils.db import (
     create_interview_session as db_create_interview_session,
     get_interview_session_db, list_interviews_by_user,
 )
+
+# Session IDs are 16 lowercase hex chars (uuid4().hex[:16]). Exposed for format
+# validation on endpoints that only carry the session_id as their identifier.
+SESSION_ID_PATTERN = re.compile(r"^[a-f0-9]{16}$")
 
 
 @dataclass

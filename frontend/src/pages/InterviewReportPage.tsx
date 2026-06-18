@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAppStore } from '@/store/appStore';
 import { getInterviewDetail } from '@/api/client';
 import type { EvaluationReport, InterviewerAgent, InterviewMessage } from '@/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import ReportChart from '@/components/interview/ReportChart';
 export default function InterviewReportPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { sessionId } = useAppStore();
 
   const state = location.state as {
     report?: EvaluationReport;
@@ -26,18 +28,18 @@ export default function InterviewReportPage() {
 
   useEffect(() => {
     if (report) return; // Already have report from state (post-interview flow)
-    if (!interviewId) {
+    if (!interviewId || !sessionId) {
       navigate('/interview');
       return;
     }
-    getInterviewDetail(interviewId)
+    getInterviewDetail(interviewId, sessionId)
       .then((res) => {
         setReport(res.report);
         setMessages(res.messages);
       })
       .catch(() => navigate('/interview'))
       .finally(() => setLoading(false));
-  }, [interviewId, navigate, report]);
+  }, [interviewId, sessionId, navigate, report]);
 
   if (loading) {
     return <div className="text-center text-muted-foreground py-20">加载中...</div>;
