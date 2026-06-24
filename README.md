@@ -16,6 +16,10 @@ HireMe.AI 是一款面向中文求职场景的 AI 简历优化与模拟面试工
 - 流式面试对话：通过 SSE 实现实时打字式回复。
 - 面试历史与报告：使用 SQLite 本地保存面试记录和评估报告。
 
+## 界面预览
+
+![HireMeAI 截图](hiremeai.png)
+
 ## 技术栈
 
 后端：
@@ -151,9 +155,10 @@ backend/app/
 
 frontend/src/
   pages/       路由页面
-  components/  UI、共享组件和面试组件
+  components/  通用 UI 组件与业务组件（interview, jd, resume 等）
   api/         API client 和 SSE 辅助函数
   store/       Zustand 状态管理
+  hooks/       自定义 React Hooks
   lib/         前端共享工具
 ```
 
