@@ -52,6 +52,10 @@ export interface CoverLetterResult {
   cover_letter: string;
 }
 
+export interface RecruitGreetingResult {
+  greeting: string;
+}
+
 export async function uploadResume(file: File): Promise<ResumeUploadResponse> {
   const form = new FormData();
   form.append('file', file);
@@ -93,6 +97,13 @@ export async function generateCoverLetter(
   session_id: string, jd_text: string, company_name?: string, position_name?: string
 ): Promise<CoverLetterResult> {
   const { data } = await api.post('/cover-letter/generate', { session_id, jd_text, company_name, position_name });
+  return data;
+}
+
+export async function generateRecruitGreeting(
+  session_id: string, jd_text: string, company_name?: string, position_name?: string
+): Promise<RecruitGreetingResult> {
+  const { data } = await api.post('/cover-letter/greeting', { session_id, jd_text, company_name, position_name });
   return data;
 }
 
@@ -302,9 +313,12 @@ export interface SessionRestoreData {
   jd_text: string;
   scores: ScoreResult | null;
   optimized_resume: string;
+  resume_optimize_result: OptimizeResult | null;
   jd_match_result: MatchResult | null;
   jd_optimized_text: string;
+  jd_optimize_result: JDOptimizeResult | null;
   cover_letter: string;
+  recruit_greeting: string;
 }
 
 export async function getSessionData(sessionId: string): Promise<SessionRestoreData> {

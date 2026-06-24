@@ -25,8 +25,11 @@ function SessionRestore() {
         jd_text: data.jd_text,
         scores: data.scores,
         optimized_resume: data.optimized_resume,
+        resume_optimize_result: data.resume_optimize_result,
         matchResult: data.jd_match_result,
+        jd_optimize_result: data.jd_optimize_result,
         cover_letter: data.cover_letter,
+        recruit_greeting: data.recruit_greeting,
       }))
       .catch(() => {}); // session expired or never existed
   }, [sessionId, resumeText, restoreSession]);
@@ -40,7 +43,7 @@ function App() {
       <SessionRestore />
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="max-w-5xl mx-auto px-4 py-8">
+        <main className="max-w-[1180px] mx-auto px-7 py-9 pb-20">
           <Suspense fallback={<div className="text-center py-12 text-muted-foreground">加载中...</div>}>
             <Routes>
               <Route path="/" element={<HomePage />} />
