@@ -62,6 +62,21 @@ MIGRATIONS: list[tuple[int, str, str]] = [
         CREATE INDEX IF NOT EXISTS idx_sessions_user ON interview_sessions(session_id);
         """,
     ),
+    (
+        2,
+        "add_recruit_greeting",
+        "ALTER TABLE user_sessions ADD COLUMN recruit_greeting TEXT DEFAULT '';",
+    ),
+    (
+        3,
+        "add_jd_optimize_result",
+        "ALTER TABLE user_sessions ADD COLUMN jd_optimize_result TEXT DEFAULT '';",
+    ),
+    (
+        4,
+        "add_resume_optimize_result",
+        "ALTER TABLE user_sessions ADD COLUMN resume_optimize_result TEXT DEFAULT '';",
+    ),
 ]
 
 

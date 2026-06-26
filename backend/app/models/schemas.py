@@ -76,6 +76,17 @@ class CoverLetterResult(BaseModel):
     cover_letter: str
 
 
+class RecruitGreetingRequest(BaseModel):
+    session_id: str
+    jd_text: str = Field(..., min_length=20)
+    company_name: Optional[str] = None
+    position_name: Optional[str] = None
+
+
+class RecruitGreetingResult(BaseModel):
+    greeting: str
+
+
 # ---- Interview Agent Models ----
 
 

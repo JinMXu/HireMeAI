@@ -57,10 +57,17 @@ class SessionData:
             extra = {}
             if row.get("jd_match_result") and row["jd_match_result"] != "{}":
                 extra["jd_match_result"] = json.loads(row["jd_match_result"])
+            if row.get("resume_optimize_result") and row["resume_optimize_result"] != "":
+                extra["resume_optimize_result"] = json.loads(row["resume_optimize_result"])
             if row.get("jd_optimized_text"):
                 extra["jd_optimized_text"] = row["jd_optimized_text"]
+            if row.get("jd_optimize_result") and row["jd_optimize_result"] != "":
+                import json as _json
+                extra["jd_optimize_result"] = _json.loads(row["jd_optimize_result"])
             if row.get("cover_letter"):
                 extra["cover_letter"] = row["cover_letter"]
+            if row.get("recruit_greeting"):
+                extra["recruit_greeting"] = row["recruit_greeting"]
             return extra
         return {}
 

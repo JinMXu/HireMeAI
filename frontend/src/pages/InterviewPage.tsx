@@ -4,9 +4,13 @@ import { useAppStore } from '@/store/appStore';
 import { setupInterview, startInterview, getInterviewHistory, getInterviewDetail, endInterview } from '@/api/client';
 import type { InterviewerAgent, InterviewHistoryItem } from '@/api/client';
 import InterviewSetup from '@/components/interview/InterviewSetup';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+
+const DIFFICULTY_LABEL: Record<string, string> = {
+  beginner: '初级',
+  intermediate: '中级',
+  advanced: '高级',
+};
 
 export default function InterviewPage() {
   const { sessionId, jdText } = useAppStore();
@@ -82,15 +86,15 @@ export default function InterviewPage() {
 
   const historyBadge = (item: InterviewHistoryItem) => {
     if (item.action === 'continue') {
-      return { label: '可继续', variant: 'default' as const };
+      return { label: '可继续', bg: 'var(--primary-soft)', color: 'var(--primary-strong)' };
     }
-    if (item.action === 'generate_report' && item.status === 'active') {
-      return { label: item.runtime_missing ? '需生成报告' : '可结束', variant: 'secondary' as const };
+    if (item.action === 'generate_report') {
+      return { label: item.runtime_missing ? '需生成报告' : '可结束', bg: 'var(--accent-soft)', color: 'oklch(45% 0.1 68)' };
     }
     if (item.action === 'view_report') {
-      return { label: '已完成', variant: 'secondary' as const };
+      return { label: '已完成', bg: 'oklch(95% 0.04 150)', color: 'var(--success)' };
     }
-    return { label: '报告缺失', variant: 'outline' as const };
+    return { label: '报告缺失', bg: 'var(--secondary)', color: 'var(--muted-foreground)' };
   };
 
   const handleHistoryClick = async (item: InterviewHistoryItem) => {
@@ -127,12 +131,22 @@ export default function InterviewPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-[960px] mx-auto space-y-6">
+      <div className="mb-2">
+        <div className="eyebrow">STEP 04 · 模拟面试</div>
+        <h1 className="page-title">配置你的模拟面试</h1>
+        <p className="page-sub">选择模式与难度，AI 会基于目标 JD 生成面试官阵容。1v1 适合专项练习，群面模拟真实多面官场景。</p>
+      </div>
+
       {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
+        <div
+          className="p-3 rounded-lg text-sm"
+          style={{ background: 'oklch(95% 0.04 28)', color: 'var(--destructive)' }}
+        >
           {error}
         </div>
       )}
+
       <InterviewSetup
         jdText={jdText}
         onStart={handleStart}
@@ -141,57 +155,70 @@ export default function InterviewPage() {
       />
 
       {history.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">历史面试记录</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {history.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div>
-                  <div className="font-medium text-sm">
-                    {item.mode === '1v1' ? '1v1 面试' : '多角色群面'}
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      {item.difficulty === 'beginner' ? '初级' : item.difficulty === 'intermediate' ? '中级' : '高级'}
-                    </Badge>
-                    <Badge variant={historyBadge(item).variant} className="ml-2 text-xs">
-                      {historyBadge(item).label}
-                    </Badge>
+        <div>
+          <div className="section-title">历史面试</div>
+          <div className="space-y-2.5">
+            {history.map((item) => {
+              const badge = historyBadge(item);
+              return (
+                <div
+                  key={item.id}
+                  className="history-item"
+                  onClick={() => handleHistoryClick(item)}
+                  style={item.action === 'unavailable' ? { opacity: 0.55, cursor: 'default' } : undefined}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center flex-wrap gap-2">
+                      <span className="font-semibold text-[14px]">
+                        {item.mode === '1v1' ? '1v1 面试' : '多角色群面'}
+                      </span>
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                        style={{ background: 'var(--secondary)', color: 'var(--muted-foreground)' }}
+                      >
+                        {DIFFICULTY_LABEL[item.difficulty] || item.difficulty}
+                      </span>
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                        style={{ background: badge.bg, color: badge.color }}
+                      >
+                        {badge.label}
+                      </span>
+                    </div>
+                    <div className="history-meta">
+                      {new Date(item.created_at).toLocaleString('zh-CN')} · {item.message_count} 条消息
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(item.created_at).toLocaleString('zh-CN')} · {item.message_count} 条消息
+                  <div className="flex items-center gap-3">
+                    {item.overall_score != null ? (
+                      <span className="text-lg font-bold text-primary">{item.overall_score}分</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {item.runtime_missing ? '运行状态已丢失' : '进行中'}
+                      </span>
+                    )}
+                    <Button
+                      size="sm"
+                      variant={item.action === 'continue' ? 'default' : 'outline'}
+                      disabled={item.action === 'unavailable' || historyLoadingId === item.id}
+                      onClick={(e) => { e.stopPropagation(); handleHistoryClick(item); }}
+                    >
+                      {historyLoadingId === item.id
+                        ? '处理中...'
+                        : item.action === 'continue'
+                          ? '继续'
+                          : item.action === 'generate_report'
+                            ? '生成报告'
+                            : item.action === 'view_report'
+                              ? '查看'
+                              : '不可用'}
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {item.overall_score != null ? (
-                    <span className="text-lg font-bold text-primary">{item.overall_score}分</span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">{item.runtime_missing ? '运行状态已丢失' : '进行中'}</span>
-                  )}
-                  <Button
-                    size="sm"
-                    variant={item.action === 'continue' ? 'default' : 'outline'}
-                    disabled={item.action === 'unavailable' || historyLoadingId === item.id}
-                    onClick={() => handleHistoryClick(item)}
-                  >
-                    {historyLoadingId === item.id
-                      ? '处理中...'
-                      : item.action === 'continue'
-                        ? '继续'
-                        : item.action === 'generate_report'
-                          ? '生成报告'
-                          : item.action === 'view_report'
-                            ? '查看'
-                            : '不可用'}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );

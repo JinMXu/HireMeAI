@@ -75,7 +75,11 @@ async def optimize(req: SessionRequest):
     if not session or not session.resume_text:
         raise HTTPException(404, "Session not found or no resume uploaded.")
     result = await optimize_resume(session.resume_text)
-    update_session(session.id, optimized_resume=result.optimized_text)
+    update_session(
+        session.id,
+        optimized_resume=result.optimized_text,
+        resume_optimize_result=result.model_dump(),
+    )
     return result
 
 
@@ -94,7 +98,10 @@ async def get_session_data(session_id: str):
         "jd_text": row.get("jd_text", ""),
         "scores": json.loads(row["scores"]) if row.get("scores") and row["scores"] != "{}" else None,
         "optimized_resume": row.get("optimized_resume", ""),
+        "resume_optimize_result": json.loads(row["resume_optimize_result"]) if row.get("resume_optimize_result") and row["resume_optimize_result"] != "" else None,
         "jd_match_result": json.loads(row["jd_match_result"]) if row.get("jd_match_result") and row["jd_match_result"] != "{}" else None,
         "jd_optimized_text": row.get("jd_optimized_text", ""),
+        "jd_optimize_result": json.loads(row["jd_optimize_result"]) if row.get("jd_optimize_result") and row["jd_optimize_result"] != "" else None,
         "cover_letter": row.get("cover_letter", ""),
+        "recruit_greeting": row.get("recruit_greeting", ""),
     }

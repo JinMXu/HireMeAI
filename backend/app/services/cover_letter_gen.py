@@ -1,8 +1,11 @@
 import json
 from typing import Optional
 from app.services.llm import llm
-from app.models.schemas import CoverLetterResult
-from app.prompts.cover_letter import COVER_LETTER_SYSTEM, COVER_LETTER_USER
+from app.models.schemas import CoverLetterResult, RecruitGreetingResult
+from app.prompts.cover_letter import (
+    COVER_LETTER_SYSTEM, COVER_LETTER_USER,
+    RECRUIT_GREETING_SYSTEM, RECRUIT_GREETING_USER,
+)
 
 
 async def generate_cover_letter(
@@ -20,3 +23,20 @@ async def generate_cover_letter(
     response = await llm.chat_json(COVER_LETTER_SYSTEM, user_msg)
     data = json.loads(response)
     return CoverLetterResult(**data)
+
+
+async def generate_recruit_greeting(
+    resume_text: str,
+    jd_text: str,
+    company_name: Optional[str] = None,
+    position_name: Optional[str] = None,
+) -> RecruitGreetingResult:
+    user_msg = RECRUIT_GREETING_USER.format(
+        resume_text=resume_text,
+        jd_text=jd_text,
+        company_name=company_name or "未指定",
+        position_name=position_name or "未指定",
+    )
+    response = await llm.chat_json(RECRUIT_GREETING_SYSTEM, user_msg)
+    data = json.loads(response)
+    return RecruitGreetingResult(**data)

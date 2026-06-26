@@ -24,5 +24,9 @@ async def optimize_for_jd_endpoint(req: JDMatchRequest):
         raise HTTPException(404, "Session not found or no resume uploaded.")
     update_session(session.id, jd_text=req.jd_text)
     result = await optimize_for_jd(session.resume_text, req.jd_text)
-    update_session(session.id, jd_optimized_text=result.optimized_text)
+    update_session(
+        session.id,
+        jd_optimized_text=result.optimized_text,
+        jd_optimize_result=result.model_dump(),
+    )
     return result

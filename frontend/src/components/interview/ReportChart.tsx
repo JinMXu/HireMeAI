@@ -12,10 +12,10 @@ export default function ReportChart({ dimensions }: ReportChartProps) {
     <div className="w-full h-64">
       <ResponsiveContainer>
         <RadarChart data={data}>
-          <PolarGrid />
-          <PolarAngleAxis dataKey="name" tick={{ fontSize: 12 }} />
-          <PolarRadiusAxis angle={30} domain={[0, 100]} />
-          <Radar dataKey="score" stroke="oklch(0.488 0.243 264.376)" fill="oklch(0.488 0.243 264.376)" fillOpacity={0.3} />
+          <PolarGrid stroke="var(--border)" />
+          <PolarAngleAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} />
+          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} stroke="var(--border)" />
+          <Radar dataKey="score" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.18} strokeWidth={2} />
         </RadarChart>
       </ResponsiveContainer>
     </div>
